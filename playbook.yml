@@ -1,0 +1,50 @@
+---
+- name: Azure openai module
+  hosts: localhost
+  vars_files:
+    - api_key.yml
+  tasks:
+    - name: First Test
+      azure_openai:
+        api_key: "{{ api_key }}"
+        message: "create a directory called pavel and inside create a file called test.txt"
+      register: result
+
+    - name: Debug
+      ansible.builtin.debug:
+        var: result.message
+
+    - name: Run command
+      ansible.builtin.shell: "{{ result.message }}"
+      args:
+        executable: /bin/bash
+      register: shell_result
+      changed_when: shell_result.rc != 0
+      failed_when: shell_result.rc != 0
+
+    - name: Complex test
+      azure_openai:
+        api_key: "{{ api_key }}"
+        message: >-
+          Put inside a file called test.txt inside the folder /root/pavel all
+          the groups name of the linux machine, in the right of each group put
+          the GUID
+      register: result
+
+    - name: Debug
+      ansible.builtin.debug:
+        var: result.message
+    - name: "Prompt user "
+      ansible.builtin.pause:
+        prompt: "The command generated is {{ result.message }}. Do you want to run it? yes/no, if not please provide the correct command"
+      register: user_input
+      failed_when: user_input.user_input != "yes" and user_input.user_input != "no"
+    - name: "Run command"
+      ansible.builtin.shell: "{{ result.message }}"
+      args:
+        executable: /bin/bash
+      register: shell_result
+      changed_when: shell_result.rc != 0
+      failed_when: shell_result.rc != 0
+     
+      
